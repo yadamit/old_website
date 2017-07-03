@@ -1,0 +1,74 @@
+<<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>you think you know bash???</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1 align="center">CTF2</h1>
+  <h2 class="qsn">you think you know bash?</h2>
+  <h5>binary and flag file can be found <a href="">here</a></h5>
+  <h4>'C' code is :</h4>
+  <pre class="code">ctf2@ip-172-31-4-22:~/did you do bandit?$ cat you\ think\ you\ know\ bash\?\?\?.c
+#include&ltstdio.h&gt
+#include&ltstdlib.h&gt
+#include&ltunistd.h&gt
+#include&ltstring.h&gt
+
+int filter(char *s){
+    int r = 0;
+    r+=(int)strstr(s, "/");
+    r+=(int)strstr(s, "sh");
+    r+=(int)strstr(s, "*");
+    r+=(int)strstr(s, "flag");
+    r+=(int)strstr(s, "who");
+    r+=(int)strstr(s, "PATH");
+    r+=(int)strstr(s, "=");
+    r+=(int)strstr(s, "{");
+    r+=(int)strstr(s, "}");
+
+    return r;
+}
+
+int main(int argc, char* argv[]){
+    if(argc == 2){
+        if(filter(argv[1]))
+            exit(1);
+        else{
+            setenv("PATH", "/nonsense", 1);
+            printf("%s", argv[1]);
+            system(argv[1]);
+        }
+    }
+    else{
+        printf("Usage: ./cmd COMMAND\n");
+        exit(1);
+    }
+    return 0;
+}</pre>
+  <h4>Looking at C code ,we concude:</h4>
+    <strong>1.</strong> It is asking for <b>two</b> arguments. One is the code itself (i.e while running we need to provide $./filename one_more_argument).And that argument should be a COMMAND (usual Terminal command).<br/>
+  <strong>2. </strong>Then,it runs a filter function on our given command,and if it contains any of the ( "/" ,"sh" , "flag" etc.) ,it will terminate the program. <b>strstr</b> function in 'c' finds any substring from a given string and returns a pointer at its starting point. Read more <a href="https://www.tutorialspoint.com/c_standard_library/c_function_strstr.htm">here</a>. <br/>
+  <strong>3. </strong>If the command doesnot contain any of those characters ,it runs :
+    <pre class="code">            setenv("PATH", "/nonsense", 1);
+            printf("%s", argv[1]);
+            system(argv[1]);</pre>
+  It sets the  <a href="https://en.wikipedia.org/wiki/PATH_(variable)">PATH</a> environment variable (try : <i>'echo $PATH'</i>)to some virtual (random) directory.Then prints the same command and makes a system call to run that command.
+  </p>
+  <h4>Finding the flag:</h4>
+  <p>To find the flag ,we need the command <b title="Not $cat flag because PATH variable has been changed"><u>$/bin/cat flag</u></b> to be executed by the program.And fortunately, it is itself asking for a command to be executed but unfortunately, the command should not contain those substrings.<br/><br/>So ,we define some environmental variables:
+    <pre class="code">           $ export b=/bin/cat
+           $ export f=flag
+</pre>
+    And then run the program as follows:
+    <pre class="code" title="Use 'tab' button to auto-complete">            $ ./you\ think\ you\ know\ bash\?\?\? '$b $f'</pre>
+    And it will show us the flag! <br><br>
+    <strong>Note:</strong>Do a victory dance if you wish to,and then try the next problem.
+  
+  </p>
+  
+  
+  
+</body>
+</html>
