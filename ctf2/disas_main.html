@@ -1,0 +1,136 @@
+<!Doctype html>
+<html>
+<head>
+<title>disas main</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<pre class="code"><snap style="color:red">gdb-peda$</snap> disas main
+Dump of assembler code for function main:
+   0x0804854b <+0>:	lea    ecx,[esp+0x4]
+   0x0804854f <+4>:	and    esp,0xfffffff0
+   0x08048552 <+7>:	push   DWORD PTR [ecx-0x4]
+   0x08048555 <+10>:	push   ebp
+   0x08048556 <+11>:	mov    ebp,esp
+   0x08048558 <+13>:	push   edi
+   0x08048559 <+14>:	push   ebx
+   0x0804855a <+15>:	push   ecx
+   0x0804855b <+16>:	sub    esp,0x7c
+   0x0804855e <+19>:	mov    eax,ecx
+   0x08048560 <+21>:	mov    eax,DWORD PTR [eax+0x4]
+   0x08048563 <+24>:	mov    DWORD PTR [ebp-0x7c],eax
+   0x08048566 <+27>:	mov    eax,gs:0x14
+   0x0804856c <+33>:	mov    DWORD PTR [ebp-0x1c],eax
+   0x0804856f <+36>:	xor    eax,eax
+   0x08048571 <+38>:	lea    eax,[ebp-0x4e]
+   0x08048574 <+41>:	mov    ecx,0x32
+   0x08048579 <+46>:	mov    ebx,0x0
+   0x0804857e <+51>:	mov    DWORD PTR [eax],ebx
+   0x08048580 <+53>:	mov    DWORD PTR [eax+ecx*1-0x4],ebx
+   0x08048584 <+57>:	lea    edx,[eax+0x4]
+   0x08048587 <+60>:	and    edx,0xfffffffc
+   0x0804858a <+63>:	sub    eax,edx
+   0x0804858c <+65>:	add    ecx,eax
+   0x0804858e <+67>:	and    ecx,0xfffffffc
+   0x08048591 <+70>:	shr    ecx,0x2
+   0x08048594 <+73>:	mov    edi,edx
+   0x08048596 <+75>:	mov    eax,ebx
+   0x08048598 <+77>:	rep stos DWORD PTR es:[edi],eax
+   0x0804859a <+79>:	mov    BYTE PTR [ebp-0x4e],0x6c
+   0x0804859e <+83>:	mov    BYTE PTR [ebp-0x4d],0x73
+   0x080485a2 <+87>:	mov    BYTE PTR [ebp-0x4c],0x20
+   0x080485a6 <+91>:	mov    DWORD PTR [ebp-0x68],0x0
+   0x080485ad <+98>:	mov    DWORD PTR [ebp-0x64],0x3
+   0x080485b4 <+105>:	sub    esp,0xc
+   0x080485b7 <+108>:	push   0x8048750
+   0x080485bc <+113>:	call   0x80483f0 <puts@plt>
+   0x080485c1 <+118>:	add    esp,0x10
+   0x080485c4 <+121>:	sub    esp,0xc
+   0x080485c7 <+124>:	push   0x8048790
+   0x080485cc <+129>:	call   0x80483f0 <puts@plt>
+   0x080485d1 <+134>:	add    esp,0x10
+   0x080485d4 <+137>:	sub    esp,0xc
+   0x080485d7 <+140>:	push   0x8048750
+   0x080485dc <+145>:	call   0x80483f0 <puts@plt>
+   0x080485e1 <+150>:	add    esp,0x10
+   0x080485e4 <+153>:	sub    esp,0xc
+   0x080485e7 <+156>:	push   0x80487b7
+   0x080485ec <+161>:	call   0x80483d0 <printf@plt>
+   0x080485f1 <+166>:	add    esp,0x10
+   0x080485f4 <+169>:	sub    esp,0x8
+   0x080485f7 <+172>:	lea    eax,[ebp-0x5f]
+   0x080485fa <+175>:	push   eax
+   0x080485fb <+176>:	push   0x80487c4
+   0x08048600 <+181>:	call   0x8048430 <__isoc99_scanf@plt>
+   0x08048605 <+186>:	add    esp,0x10
+   0x08048608 <+189>:	movzx  eax,BYTE PTR [ebp-0x5f]
+   0x0804860c <+193>:	mov    BYTE PTR [ebp-0x6a],al
+   0x0804860f <+196>:	mov    BYTE PTR [ebp-0x69],0x5c
+   0x08048613 <+200>:	mov    DWORD PTR [ebp-0x68],0x0
+   0x0804861a <+207>:	jmp    0x8048683 <main+312>
+   0x0804861c <+209>:	lea    edx,[ebp-0x5f]
+   0x0804861f <+212>:	mov    eax,DWORD PTR [ebp-0x68]
+   0x08048622 <+215>:	add    eax,edx
+   0x08048624 <+217>:	movzx  eax,BYTE PTR [eax]
+   0x08048627 <+220>:	mov    BYTE PTR [ebp-0x6a],al
+   0x0804862a <+223>:	cmp    BYTE PTR [ebp-0x6a],0x40
+   0x0804862e <+227>:	jle    0x8048636 <main+235>
+   0x08048630 <+229>:	cmp    BYTE PTR [ebp-0x6a],0x5a
+   0x08048634 <+233>:	jle    0x804864e <main+259>
+   0x08048636 <+235>:	cmp    BYTE PTR [ebp-0x6a],0x60
+   0x0804863a <+239>:	jle    0x8048642 <main+247>
+   0x0804863c <+241>:	cmp    BYTE PTR [ebp-0x6a],0x7a
+   0x08048640 <+245>:	jle    0x804864e <main+259>
+   0x08048642 <+247>:	cmp    BYTE PTR [ebp-0x6a],0x2f
+   0x08048646 <+251>:	jle    0x8048662 <main+279>
+   0x08048648 <+253>:	cmp    BYTE PTR [ebp-0x6a],0x39
+   0x0804864c <+257>:	jg     0x8048662 <main+279>
+   0x0804864e <+259>:	lea    edx,[ebp-0x4e]
+   0x08048651 <+262>:	mov    eax,DWORD PTR [ebp-0x64]
+   0x08048654 <+265>:	add    edx,eax
+   0x08048656 <+267>:	movzx  eax,BYTE PTR [ebp-0x6a]
+   0x0804865a <+271>:	mov    BYTE PTR [edx],al
+   0x0804865c <+273>:	add    DWORD PTR [ebp-0x64],0x1
+   0x08048660 <+277>:	jmp    0x804867f <main+308>
+   0x08048662 <+279>:	lea    edx,[ebp-0x4e]
+   0x08048665 <+282>:	mov    eax,DWORD PTR [ebp-0x64]
+   0x08048668 <+285>:	add    eax,edx
+   0x0804866a <+287>:	mov    BYTE PTR [eax],0x5c
+   0x0804866d <+290>:	mov    eax,DWORD PTR [ebp-0x64]
+   0x08048670 <+293>:	lea    edx,[eax+0x1]
+   0x08048673 <+296>:	movzx  eax,BYTE PTR [ebp-0x6a]
+   0x08048677 <+300>:	mov    BYTE PTR [ebp+edx*1-0x4e],al
+   0x0804867b <+304>:	add    DWORD PTR [ebp-0x64],0x2
+   0x0804867f <+308>:	add    DWORD PTR [ebp-0x68],0x1
+   0x08048683 <+312>:	sub    esp,0xc
+   0x08048686 <+315>:	lea    eax,[ebp-0x5f]
+   0x08048689 <+318>:	push   eax
+   0x0804868a <+319>:	call   0x8048410 <strlen@plt>
+   0x0804868f <+324>:	add    esp,0x10
+   0x08048692 <+327>:	mov    edx,eax
+   0x08048694 <+329>:	mov    eax,DWORD PTR [ebp-0x68]
+   0x08048697 <+332>:	cmp    edx,eax
+   0x08048699 <+334>:	ja     0x804861c <main+209>
+   0x0804869b <+336>:	sub    esp,0xc
+   0x0804869e <+339>:	lea    eax,[ebp-0x4e]
+   0x080486a1 <+342>:	push   eax
+   0x080486a2 <+343>:	call   0x8048400 <system@plt>
+   0x080486a7 <+348>:	add    esp,0x10
+   0x080486aa <+351>:	mov    eax,0x0
+   0x080486af <+356>:	mov    edi,DWORD PTR [ebp-0x1c]
+   0x080486b2 <+359>:	xor    edi,DWORD PTR gs:0x14
+   0x080486b9 <+366>:	je     0x80486c0 <main+373>
+   0x080486bb <+368>:	call   0x80483e0 <__stack_chk_fail@plt>
+   0x080486c0 <+373>:	lea    esp,[ebp-0xc]
+   0x080486c3 <+376>:	pop    ecx
+   0x080486c4 <+377>:	pop    ebx
+   0x080486c5 <+378>:	pop    edi
+   0x080486c6 <+379>:	pop    ebp
+   0x080486c7 <+380>:	lea    esp,[ecx-0x4]
+   0x080486ca <+383>:	ret    
+End of assembler dump.</pre>
+</body>
+
+
+
+</html>
